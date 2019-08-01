@@ -11,23 +11,21 @@ namespace appUSB_Debugger
     public class USBLocal
     {
         public uint VID = 0x1A86, PID = 0x7523;
-        private USBClassLibrary.USBClass PortUSB;
-        private System.Collections.Generic.List<USBClassLibrary.USBClass.DeviceProperties> ListOfUSBDeviceProperties;
-
-        public IntPtr Handle { get; private set; }
+        private USBClass PortUSB = new USBClass();
+        private List<USBClass.DeviceProperties> ListOfUSBDeviceProperties;
 
         public void SearchDevices()
         {
-            PortUSB = new USBClassLibrary.USBClass();
-            ListOfUSBDeviceProperties = new List<USBClassLibrary.USBClass.DeviceProperties>();
-            PortUSB.USBDeviceAttached += new USBClassLibrary.USBClass.USBDeviceEventHandler(USBDeviceAttached);
-            PortUSB.USBDeviceRemoved += new USBClassLibrary.USBClass.USBDeviceEventHandler(USBDeviceRemoved);
-            PortUSB.RegisterForDeviceChange(true, this.Handle);
+            
+            ListOfUSBDeviceProperties = new List<USBClass.DeviceProperties>();
+            PortUSB.USBDeviceAttached += new USBClass.USBDeviceEventHandler(USBDeviceAttached);
+            PortUSB.USBDeviceRemoved += new USBClass.USBDeviceEventHandler(USBDeviceRemoved);
+            PortUSB.RegisterForDeviceChange(true, form.Handle);
         }
 
         public void DevicesCOMPorts(List<string> COMPorts)
         {
-            if (USBClassLibrary.USBClass.GetUSBDevice(VID, PID, ref ListOfUSBDeviceProperties, true))
+            if (USBClass.GetUSBDevice(VID, PID, ref ListOfUSBDeviceProperties, true))
             {
                 System.Diagnostics.Debug.WriteLine("Found com_ports:  ");
 
@@ -40,14 +38,14 @@ namespace appUSB_Debugger
             }
         }
 
-        private void USBDeviceAttached(object sender, USBClassLibrary.USBClass.USBDeviceEventArgs e)
+        private void USBDeviceAttached(object sender, USBClass.USBDeviceEventArgs e)
         {
-
+            System.Diagnostics.Debug.WriteLine("            USB DEVICE ATTACHED");
         }
 
-        private void USBDeviceRemoved(object sender, USBClassLibrary.USBClass.USBDeviceEventArgs e)
+        private void USBDeviceRemoved(object sender, USBClass.USBDeviceEventArgs e)
         {
-
+            System.Diagnostics.Debug.WriteLine("            USB DEVICE REMOVED");
         }
     }
 }

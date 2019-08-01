@@ -16,17 +16,6 @@ namespace appUSB_Debugger
 
         public void InitAllSerialPorts()
         {
-            //creates a generic port with correct communication properties
-            SerialPort port = new SerialPort();
-            port.BaudRate = 115200;
-            port.DataBits = 8;
-            port.StopBits = (StopBits)Enum.Parse(typeof(StopBits), "1", true);
-            port.Parity = (Parity)Enum.Parse(typeof(Parity), "none", true);
-            port.Handshake = (Handshake)Enum.Parse(typeof(Handshake), "XonXoff", true);
-
-            port.ReadTimeout = 150;
-            port.WriteTimeout = 1000;
-
             System.Diagnostics.Debug.WriteLine("Serial Ports Init:  ");
 
             ///<summary>
@@ -37,8 +26,19 @@ namespace appUSB_Debugger
             ///</summary>
             for (int i = 0; i < serialPortNameList.Count; i++)
             {
+                //creates a generic port with correct communication properties
+                SerialPort port = new SerialPort();
+                port.BaudRate = 115200;
+                port.DataBits = 8;
+                port.StopBits = (StopBits)Enum.Parse(typeof(StopBits), "1", true);
+                port.Parity = (Parity)Enum.Parse(typeof(Parity), "none", true);
+                port.Handshake = (Handshake)Enum.Parse(typeof(Handshake), "XonXoff", true);
+
+                port.ReadTimeout = 1000;
+                port.WriteTimeout = 1000;
                 port.PortName = serialPortNameList[i];
-                serialPortList.Add(port);           //POSSIBLE PROBLEM:  If function is ran twice, ports will be added multiple times.
+                serialPortList.Add(port);                   //POSSIBLE PROBLEM:  If function is ran twice, ports will be added multiple times.
+
                 System.Diagnostics.Debug.WriteLine(serialPortList[i].PortName);
                 serialPortList[i].Open();
             }

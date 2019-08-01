@@ -51,7 +51,8 @@
   <ItemGroup>
     <Compile Include="Classes\AES128Encryption.cs" />
     <Compile Include="Classes\CommunicationSerial.cs" />
-    <Compile Include="Classes\Hub.cs" />
+    <Compile Include="Classes\HubClass.cs" />
+    <Compile Include="Classes\Pairing.cs" />
     <Compile Include="Classes\SerialLocal.cs" />
     <Compile Include="Classes\Tests.cs" />
     <Compile Include="Classes\USBLocal.cs" />
@@ -63,7 +64,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Classes\Sensor.cs" />
+    <Compile Include="Classes\SensorClass.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -88,6 +89,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Classes\CustomEventArgs\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

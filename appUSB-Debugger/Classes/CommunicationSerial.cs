@@ -11,21 +11,14 @@ namespace appUSB_Debugger
 { 
     public class CommunicationSerial
     {
-        public USBLocal usb;
-        public SerialLocal serial;
-
-        #region EventSetup
-        public delegate void SerialMsgReadEventHandler(object source, EventArgs args);
-        public event SerialMsgReadEventHandler SerialMsgRead;
-        #endregion EventSetup
+        public USBLocal USB = new USBLocal();
+        public SerialLocal Serial = new SerialLocal();
 
         public void Init()
         {
-            usb = new USBLocal();
-            usb.SearchDevices();
-            serial = new SerialLocal();
-            usb.DevicesCOMPorts(serial.serialPortNameList);
-            serial.InitAllSerialPorts();
+            USB.SearchDevices();
+            USB.DevicesCOMPorts(Serial.serialPortNameList);
+            Serial.InitAllSerialPorts();
         }
 
         public string SerialReadLine(SerialPort serialPort)
@@ -33,7 +26,6 @@ namespace appUSB_Debugger
             try
             {
                 string messageReceived = serialPort.ReadLine();
-                if (messageReceived != "") OnSerialMsgRead();      //register msg read event
                 return messageReceived;
             }
             catch (TimeoutException)
@@ -41,7 +33,6 @@ namespace appUSB_Debugger
                 System.Diagnostics.Debug.WriteLine("Serial read TIMEOUT port: " + serialPort.PortName);
                 return null;
             }
-            
         }
 
         public void SerialWriteLine(SerialPort serialPort, string message)
@@ -55,12 +46,5 @@ namespace appUSB_Debugger
                 System.Diagnostics.Debug.WriteLine("Serial write TIMEOUT port: " + serialPort.PortName);
             }
         }
-
-        #region EventInvokers
-        protected virtual void OnSerialMsgRead()
-        {
-            SerialMsgRead?.Invoke(this, EventArgs.Empty);   //if there are subscribers to this event, (event != null) invoke event
-        }
-        #endregion EventInvokers
     }
 }
