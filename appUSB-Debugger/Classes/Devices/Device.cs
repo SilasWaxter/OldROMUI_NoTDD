@@ -9,7 +9,7 @@ using USBClassLibrary;
 
 namespace appUSB_Debugger
 {
-    class SensorClass
+    public class Device
     {
         public UInt16[] MacAdd = { 0, 0, 0, 0, 0, 0 };     //Mac-Address of sens
         public SerialPort serialPort;

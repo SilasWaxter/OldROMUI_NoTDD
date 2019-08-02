@@ -9,9 +9,8 @@ using USBClassLibrary;
 
 namespace appUSB_Debugger
 {
-    class HubClass
+    public static class Sensor1
     {
-        public UInt16[] MacAdd = { 0, 0, 0, 0, 0, 0 };     //Mac-Address of hub
-        public SerialPort serialPort;
+        public static Device device = new Device();
     }
 }
