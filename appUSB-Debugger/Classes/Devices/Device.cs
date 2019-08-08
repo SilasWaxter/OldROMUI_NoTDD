@@ -11,7 +11,26 @@ namespace appUSB_Debugger
 {
     public class Device
     {
-        public UInt16[] MacAdd = { 0, 0, 0, 0, 0, 0 };     //Mac-Address of sens
+        public byte[] macAdd = { 0, 0, 0, 0, 0, 0 };     //Mac-Address of device
         public SerialPort serialPort;
+        public string comPort;
+        public bool serialPortReconnecting = false;
+
+        public List<string> readMsg = new List<string>();
+
+        public void ClearData()
+        {
+            if(serialPort != null)
+            {
+                serialPort.Close();
+                serialPort.Dispose();
+            }
+
+
+            serialPort = null;
+            comPort = null;
+            byte[] nullMacAdd = { 0, 0, 0, 0, 0, 0 };
+            nullMacAdd = macAdd;
+        }
     }
 }

@@ -11,6 +11,6 @@ namespace appUSB_Debugger
 {
     public static class Sensor1
     {
-        public static Device device = new Device();
+        public static Device device;
     }
 }

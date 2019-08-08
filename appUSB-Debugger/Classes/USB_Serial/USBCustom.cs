@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using System.IO.Ports;
 using USBClassLibrary;
+using System.Diagnostics;
 
 namespace appUSB_Debugger
 {
@@ -20,10 +21,12 @@ namespace appUSB_Debugger
     /// </summary>
     public class USBCustom
     {
-        //private uint VID = 0x1A86, PID = 0x7523;
+        private List<string> attachedComPorts = new List<string>();
+        private List<string> removedComPorts = new List<string>();
+
         private string VID_string = "1A86", PID_string = "7523";
 
-        public void SetupUSBForEvents(USBClass LibraryUSB, Form1 form1)
+        public void SetupUSBForEvents(USBClass LibraryUSB, MainForm form1)
         {
             var ListOfUSBDeviceProperties = new List<USBClass.DeviceProperties>();
             LibraryUSB.USBDeviceAttached += new USBClass.USBDeviceEventHandler(USBDeviceAttached);
@@ -96,13 +99,26 @@ namespace appUSB_Debugger
             SearchComPorts(ref currentComPorts);
 
             //create list with elements in currentComPorts, but NOT in containersComPorts
-            var comPortAttached = currentComPorts.Except(Serial.CurrentComPortsInContainers());
+            var comPortAttached = currentComPorts.Except(Serial.ComPortsClassified());
 
             foreach (string comPort in comPortAttached)
             {
-                System.Diagnostics.Debug.WriteLine("DEVICE ATTACHED:   " + comPort);
-                Serial.AddDevice(comPort);
-                Pairing.Pair(Serial.deviceBeingAdded.serialPort);
+                //prevents event from firing multiple times.
+                if (!attachedComPorts.Contains(comPort))
+                {
+                    //signal that attach event has been fired. signal that remove events are now acceptable for comPort
+                    attachedComPorts.Add(comPort);
+                    removedComPorts.Remove(comPort);
+
+                    System.Diagnostics.Debug.Write("DEVICE ATTACHED:   ");
+
+                    var sw = Stopwatch.StartNew();
+                    while (sw.ElapsedMilliseconds <= 1000) ;
+                    sw.Stop();
+
+                    System.Diagnostics.Debug.WriteLine(comPort);
+                    Serial.AddDevice(comPort);
+                }
             }
         }
 
@@ -113,13 +129,22 @@ namespace appUSB_Debugger
             SearchComPorts(ref currentComPorts);
 
             //create list with elements in containersComPorts, but NOT in currentComPorts
-            var portRemoved = Serial.CurrentComPortsInContainers().Except(currentComPorts);
+            var portRemoved = Serial.ComPortsClassified().Except(currentComPorts);
 
             foreach (string comPort in portRemoved)
             {
-                System.Diagnostics.Debug.WriteLine("DEVICE Removed:   " + comPort);
-                Serial.RemoveDevice(comPort);
+                //prevents event from firing multiple times.
+                if (!removedComPorts.Contains(comPort))
+                {
+                    //signal that remove event has been fired. signal that attach events are now acceptable for comPort
+                    removedComPorts.Add(comPort);
+                    attachedComPorts.Remove(comPort);
+
+                    System.Diagnostics.Debug.WriteLine("DEVICE Removed:   " + comPort);
+                    Task removeDevice = Task.Factory.StartNew(() => Serial.RemoveDevice(comPort));
+                }
             }
+
         }
     }
 }
