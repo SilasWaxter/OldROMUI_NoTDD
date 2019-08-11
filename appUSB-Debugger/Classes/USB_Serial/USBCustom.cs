@@ -48,7 +48,7 @@ namespace appUSB_Debugger
                 {
                     if (names.Contains(s))
                     {
-                        //System.Diagnostics.Debug.WriteLine(s);
+                        //System.Diagnostics.Debug.Write(s);
                         comPorts.Add(s);
                     }
                 }

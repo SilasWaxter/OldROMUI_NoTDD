@@ -49,8 +49,20 @@ namespace appUSB_Debugger
                 serialPort.ReadTimeout = 2000;
                 serialPort.WriteTimeout = 500;
 
-                //Open the port.
-                serialPort.Open();
+                try
+                {
+                    //Open the port.
+                    serialPort.Open();
+                }
+                catch
+                {
+                    var sw = Stopwatch.StartNew();
+                    if (sw.ElapsedMilliseconds >= 2500)         //after 2500 milliseconds, try again.
+                    {
+                        serialPort = null;
+                        return false;
+                    }
+                }
 
                 //Create a Device object to contain the SerialPort, the SerialPort.PortName, the List<string> readMsg (holds received msgs), and the MacAdd.
                 Device currentDevice = new Device();
@@ -78,7 +90,7 @@ namespace appUSB_Debugger
                         currentDevice.readMsg.Add(message);
 
                         //OUTPUT INCOMING MESSAGES
-                        //System.Diagnostics.Debug.WriteLine(message);
+                        //System.Diagnostics.Debug.WriteLine($"\t\t\t\t\t\t\t\t\t\t\t\t{message}");
                     }
                 };
 
@@ -120,7 +132,7 @@ namespace appUSB_Debugger
             currentDevice.readMsg.Clear();
 
             //"Init. Serial Com."
-            Serial.WriteLine(currentDevice.serialPort, "~ISC~");
+            Serial.Write(currentDevice, "~ISC~");
 
             //Delay
             var sw = Stopwatch.StartNew();
@@ -353,54 +365,46 @@ namespace appUSB_Debugger
             currentDevice.serialPortReconnecting = false;
         }
 
-        public static bool ReceivedMessageBool(SerialPort serialPort, string messageReceived)
+        public static bool ReceivedMessageBool(Device currentDevice, string messageReceived)
         {
-            //Find device being referenced.
-            Device device = DeviceFromSerialPort(serialPort);
-
             //if message is found to be == messageReceived, delete the msg from device.readMsg and return true
-            if (device.readMsg.Contains(messageReceived))
+            if (currentDevice.readMsg.Contains(messageReceived))
             {
-                device.readMsg.Remove(messageReceived);
+                currentDevice.readMsg.Remove(messageReceived);
                 return true;
             }
             //if no messages are found to be == messageReceived, return False
             return false;
         }
 
-        public static void WriteLine(SerialPort serialPort, string message)
+        public static void Write(Device currentDevice, string message)
         {
             try
             {
-                if (serialPort.IsOpen)
-                {
-                    serialPort.WriteLine(message);
-                }
+                currentDevice.serialPort.Write(message);
             }
             catch
             {
-                System.Diagnostics.Debug.WriteLine("Serial write EXCEPTION port: " + serialPort.PortName);
-                ReconnectToDeviceAsync(DeviceFromSerialPort(serialPort));
+                System.Diagnostics.Debug.WriteLine("Serial write EXCEPTION port: " + currentDevice.serialPort.PortName);
+                ReconnectToDeviceAsync(currentDevice);
             }
         }
 
-        public static void TransferBytes(SerialPort serialPort, byte[] arrayByte)
+        public static void TransferBytes(Device currentDevice, byte[] arrayByte)
         {
-            //clears read msg storage.
-            //DeviceFromSerialPort(serialPort).readMsg.Clear();
             for (int i = 0; i < arrayByte.Length; i++)
             {
                 //Write Byte
-                Serial.WriteLine(serialPort, $"~{arrayByte[i].ToString()}~");                        
+                Serial.Write(currentDevice, $"~{arrayByte[i].ToString()}~");                        
 
                 //while Byte is not read,
-                while (!Serial.ReceivedMessageBool(serialPort, $"~{arrayByte[i].ToString()}~"))
+                while (!Serial.ReceivedMessageBool(currentDevice, $"~{arrayByte[i].ToString()}~"))
                 {
                     var sw = new Stopwatch();
                     sw.Start();
-                    if (sw.ElapsedMilliseconds >= 1000)         //after 1000 milliseconds, try byte again.
+                    if (sw.ElapsedMilliseconds >= 5000)         //after 5000 milliseconds, try byte again.
                     {
-                        Serial.WriteLine(serialPort, "~IncByteRetry~");
+                        Serial.Write(currentDevice, "~IncByteRetry~");
                         i = i - 1;
                         System.Diagnostics.Debug.WriteLine("byte transfer NOT successful");
                         break;
@@ -428,21 +432,6 @@ namespace appUSB_Debugger
                     currentCom.Add(device.comPort);
 
             return currentCom;
-        }
-
-        public static Device DeviceFromSerialPort(SerialPort serialPort)
-        {
-            if (serialPort == Hub.device.serialPort)
-                return Hub.device;
-
-            if (serialPort == Sensor1.device.serialPort)
-                return Sensor1.device;
-
-            if (serialPort == Sensor2.device.serialPort)
-                return Sensor2.device;
-
-            //If serialPort is not contained.  Return null.  Will likely cause exception indicating issue.
-            return null;
         }
     }
 }

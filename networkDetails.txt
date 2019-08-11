@@ -1,4 +1,4 @@
 Aes128Key[0E:80:F4:71:40:31:C3:CB:E8:85:53:6B:3D:D4:2B:12]
-Sensor1;macAdd[84:0D:8E:8F:46:76]
-Hub;macAdd[84:0D:8E:8A:92:CF]
 Sensor2;macAdd[84:0D:8E:8A:92:D7]
+Sensor1;macAdd[84:0D:8E:8A:92:CF]
+Hub;macAdd[86:0D:8E:8F:46:76]

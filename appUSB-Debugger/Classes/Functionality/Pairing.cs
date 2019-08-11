@@ -7,16 +7,16 @@ using System.Threading;
 
 using System.IO.Ports;
 using USBClassLibrary;
+using System.Diagnostics;
 
 namespace appUSB_Debugger
 {
     static class Pairing
     {
         //Async Pair Method
-        public static async void Pair(SerialPort serialPort, MainForm form)
+        public static async void Pair(Device currentDevice)
         {
             //Find and store device [Device.cs object and Parent Class's name] from serialPort param.
-            Device currentDevice = Serial.DeviceFromSerialPort(serialPort);
             string currentDeviceType = null;
             if (currentDevice.comPort == Sensor1.device.comPort)
                 currentDeviceType = "Sensor 1";
@@ -25,69 +25,75 @@ namespace appUSB_Debugger
             if (currentDevice.comPort == Hub.device.comPort)
                 currentDeviceType = "Hub";
 
-            form.tbStatus.AppendText($"Starting {currentDeviceType} Pair...\n");
-            form.tbStatus.AppendText("\tSharing Key\n");
-            bool shareKeySuccess = await Pairing.SharKeyAsync(currentDevice.serialPort);
 
+            System.Diagnostics.Debug.WriteLine($"Starting {currentDeviceType} Pair...\n");
+            //System.Diagnostics.Debug.Write("\tSharing Key\n");
+
+            //Share Key
+            bool shareKeySuccess = await Pairing.SharKeyAsync(currentDevice);
+
+            //Share MacAdd(s)
+            #region ShareMacAdds
             if(currentDeviceType == "Sensor 1")
             {
-                form.tbStatus.AppendText($"\tSharing Hub Mac Address to Sensor 1\n");
-                bool shareMacAddSuccess = await ShareMacAddAsync(currentDevice.serialPort, false, false, true);
+                //System.Diagnostics.Debug.WriteLine($"\tSharing Hub MacAdd to Sensor 1\n");
+                bool shareMacAddSuccess = await ShareMacAddAsync(currentDevice, false, false, true);
             }
             if (currentDeviceType == "Sensor 2")
             {
-                form.tbStatus.AppendText($"\tSharing Hub Mac Address to Sensor 2\n");
-                bool shareMacAddSuccess = await ShareMacAddAsync(currentDevice.serialPort, false, false, true);
+                //System.Diagnostics.Debug.WriteLine($"\tSharing Hub MacAdd to Sensor 2\n");
+                bool shareMacAddSuccess = await ShareMacAddAsync(currentDevice, false, false, true);
             }
             if (currentDeviceType == "Hub")
             {
                 //Share Sensor1 MacAdd
-                form.tbStatus.AppendText($"\tSharing Sensor1 Mac Address to Hub\n");
-                bool shareSensor1MacAddSuccess = await ShareMacAddAsync(currentDevice.serialPort, true, false, false);
+                //System.Diagnostics.Debug.WriteLine($"\tSharing Sensor1 MacAdd to Hub\n");
+                bool shareSensor1MacAddSuccess = await ShareMacAddAsync(currentDevice, true, false, false);
 
                 //Share Sensor2 MacAdd
-                form.tbStatus.AppendText($"\tSharing Sensor2 Mac Address to Hub\n");
-                bool shareSensor2MacAddSuccess = await ShareMacAddAsync(currentDevice.serialPort, false, true, false);
+                //System.Diagnostics.Debug.WriteLine($"\tSharing Sensor2 MacAdd to Hub\n");
+                bool shareSensor2MacAddSuccess = await ShareMacAddAsync(currentDevice, false, true, false);
             }
+            #endregion ShareMacAdds
 
-            form.tbStatus.AppendText($"{currentDeviceType} Pair Complete.\n");
+            //Restart Device
+            Serial.Write(currentDevice, "~restart~");                               //restart device.  set key to key_from_eeprom.  connect to hub via hubMacAdd_from_eeprom.
+            while (!Serial.ReceivedMessageBool(currentDevice, "~restarting~")) ;    //wait for restart confirmation.
+
+            System.Diagnostics.Debug.WriteLine($"{currentDeviceType} Pair Complete.");
             if (currentDeviceType == "Sensor 1" || currentDeviceType == "Sensor 2")
-                form.tbStatus.AppendText($"Safe to Remove {currentDeviceType}\n");
+            {
+                System.Diagnostics.Debug.WriteLine($"\t\tSafe to Remove {currentDeviceType}\n");
+            }
         }
 
         //Task Wrappers
-        private static Task<bool> SharKeyAsync(SerialPort serialPort)
+        private static Task<bool> SharKeyAsync(Device currentDevice)
         {
-            return Task.Factory.StartNew(() => (ShareKey(serialPort)));
+            return Task.Factory.StartNew(() => (ShareKey(currentDevice)));
         }
 
-        private static Task<bool> ShareMacAddAsync(SerialPort serialPort, bool sensor1 = false, bool sensor2 = false, bool hub = false)
+        private static Task<bool> ShareMacAddAsync(Device currentDevice, bool sensor1 = false, bool sensor2 = false, bool hub = false)
         {
-            return Task.Factory.StartNew(() => (ShareMacAdd(serialPort, sensor1, sensor2, hub)));
+            return Task.Factory.StartNew(() => (ShareMacAdd(currentDevice, sensor1, sensor2, hub)));
         }
 
         //Actual Functions and Methods
-        private static bool ShareKey(SerialPort serialPort)
+        private static bool ShareKey(Device currentDevice)
         {
-            //Get device from serialPort
-            Device currentDevice = Serial.DeviceFromSerialPort(serialPort);
-
             //Prompt Device if its R2Rkey (Ready to Receive Key)
-            Serial.WriteLine(serialPort, "~R2Rkey~");
+            Serial.Write(currentDevice, "~R2Rkey~");
 
             //Wait for device to accept prompt,
-            while (!Serial.ReceivedMessageBool(serialPort, "~R2Rkey~")) ;//System.Diagnostics.Debug.WriteLine("Waiting for ~R2Rkey~ Confirmation");
+            while (!Serial.ReceivedMessageBool(currentDevice, "~R2Rkey~")) ;//System.Diagnostics.Debug.Write("Waiting for ~R2Rkey~ Confirmation");
 
-            Serial.TransferBytes(serialPort, AES128Encryption.key);
-            System.Diagnostics.Debug.WriteLine($"Key Transfer to ({serialPort.PortName}) Complete");
+            Serial.TransferBytes(currentDevice, AES128Encryption.key);
+            System.Diagnostics.Debug.WriteLine($"Key Transfer to ({currentDevice.serialPort.PortName}) Complete");
             return true;
         }
 
-        private static bool ShareMacAdd(SerialPort serialPort, bool sensor1 = false, bool sensor2 = false, bool hub = false)
+        private static bool ShareMacAdd(Device currentDevice, bool sensor1 = false, bool sensor2 = false, bool hub = false)
         {
-            //Get share_target_device from serialPort
-            Device currentDevice = Serial.DeviceFromSerialPort(serialPort);
-
             //Select MacAdd's_Device based on Parameters
             string sourceMacAdd = null;                         //Contains macAdd's device name (ie. sensor1, sensor2, hub)
             byte[] macAddShared = { 0, 0, 0, 0, 0, 0 };         //Mac-Address of device
@@ -110,32 +116,27 @@ namespace appUSB_Debugger
             //if none of the devices were selected, return false indicating share failed
             if (sourceMacAdd == null)
             {
-                System.Diagnostics.Debug.WriteLine($"ShareMacAdd ({serialPort.PortName}): no device selected");
+                System.Diagnostics.Debug.WriteLine($"ShareMacAdd ({currentDevice.serialPort.PortName}): no device selected");
                 return false;
             }
 
             //Prompt Device if its R2RMac (Ready to Receive Mac)
-            Serial.WriteLine(serialPort, "~R2RMac~");
+            Serial.Write(currentDevice, "~R2RMac~");
 
             //Wait for device to accept prompt,
-            while (!Serial.ReceivedMessageBool(serialPort, "~R2RMac~")) ; //System.Diagnostics.Debug.WriteLine("Waiting for ~R2RMac~ Confirmation");
+            while (!Serial.ReceivedMessageBool(currentDevice, "~R2RMac~")) ; //System.Diagnostics.Debug.Write("Waiting for ~R2RMac~ Confirmation");
 
             //Tell device which device's mac is being shared.
-            Serial.WriteLine(serialPort, $"~{sourceMacAdd}~");
+            Serial.Write(currentDevice, $"~{sourceMacAdd}~");
 
             //Wait for device confirmation,
-            while (!Serial.ReceivedMessageBool(serialPort, $"~{sourceMacAdd}~")) ; //System.Diagnostics.Debug.WriteLine($"Waiting for ~{sourceMacAdd}~ Confirmation");
-            
+            while (!Serial.ReceivedMessageBool(currentDevice, $"~{sourceMacAdd}~")) ; //System.Diagnostics.Debug.Write($"Waiting for ~{sourceMacAdd}~ Confirmation");
+
             //Share macAdd
-            Serial.TransferBytes(serialPort, macAddShared);
-            System.Diagnostics.Debug.WriteLine($"{sourceMacAdd}macAdd Transfer to ({serialPort.PortName}) Complete");
+            Serial.TransferBytes(currentDevice, macAddShared);
+            System.Diagnostics.Debug.WriteLine($"{sourceMacAdd}macAdd Transfer to ({currentDevice.serialPort.PortName}) Complete");
 
             return true;
         }     
-
-        public static void WaitForDeviceClassification(Device device)           //Ensures Device is plugged in.
-        {
-            while (device.serialPort == null) ;
-        }
     }
 }

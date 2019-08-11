@@ -35,7 +35,7 @@ namespace appUSB_Debugger
                         key[i] = Convert.ToByte(keyFromFileSplit[i], 16);
 
                     System.Diagnostics.Debug.WriteLine($"Found key in File: {keyFromFile}");
-                    //System.Diagnostics.Debug.WriteLine(BitConverter.ToString(key).Replace('-', ':'));
+                    //System.Diagnostics.Debug.Write(BitConverter.ToString(key).Replace('-', ':'));
 
                     return;
                 }

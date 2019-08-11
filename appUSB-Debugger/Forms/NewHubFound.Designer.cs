@@ -102,7 +102,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.8F);
             this.label2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
             this.label2.Location = new System.Drawing.Point(3, 3);
             this.label2.Name = "label2";
@@ -129,7 +129,7 @@
             this.label4.ForeColor = System.Drawing.Color.Silver;
             this.label4.Location = new System.Drawing.Point(4, 27);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(319, 32);
+            this.label4.Size = new System.Drawing.Size(292, 30);
             this.label4.TabIndex = 11;
             this.label4.Text = "Not a new Hub? Please reattach the device or restart\r\nthe program.\r\n";
             // 
