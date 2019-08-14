@@ -21,17 +21,19 @@ namespace appUSB_Debugger
     /// </summary>
     public class USBCustom
     {
+        private MainForm _mainForm;
         private List<string> attachedComPorts = new List<string>();
         private List<string> removedComPorts = new List<string>();
 
         private string VID_string = "1A86", PID_string = "7523";
 
-        public void SetupUSBForEvents(USBClass LibraryUSB, MainForm form1)
+        public void SetupUSBForEvents(USBClass LibraryUSB, MainForm mainForm)
         {
+            this._mainForm = mainForm;
             var ListOfUSBDeviceProperties = new List<USBClass.DeviceProperties>();
             LibraryUSB.USBDeviceAttached += new USBClass.USBDeviceEventHandler(USBDeviceAttached);
             LibraryUSB.USBDeviceRemoved += new USBClass.USBDeviceEventHandler(USBDeviceRemoved);
-            LibraryUSB.RegisterForDeviceChange(true, form1.Handle);
+            LibraryUSB.RegisterForDeviceChange(true, mainForm.Handle);
         }
 
         /// <summary>

@@ -50,10 +50,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\Constants.cs" />
     <Compile Include="Classes\Devices\Device.cs" />
     <Compile Include="Classes\Devices\Sensor2.cs" />
     <Compile Include="Classes\Functionality\AES128Encryption.cs" />
     <Compile Include="Classes\Devices\Hub.cs" />
+    <Compile Include="Classes\Functionality\GetQuat.cs" />
     <Compile Include="Classes\Functionality\Pairing.cs" />
     <Compile Include="Classes\USB_Serial\Serial.cs" />
     <Compile Include="Classes\Tests\Tests.cs" />

@@ -19,6 +19,9 @@ namespace appUSB_Debugger
 
         private async void Pair_ClickAsync(object sender, EventArgs e)
         {
+            Serial.Write(Hub.device, "~stopQuatSender~");
+            while (!Serial.ReceivedMessageBool(Hub.device, "~stopingQuatSender~")) ;
+
             //Create a task that completes when/if a Sensor1 device is classified.
             Task s1PluggedIn = Task.Factory.StartNew(() => { while (Sensor1.device == null) ; });
             await s1PluggedIn;

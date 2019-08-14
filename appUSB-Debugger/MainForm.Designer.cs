@@ -49,14 +49,14 @@
             this.pictureBox4 = new System.Windows.Forms.PictureBox();
             this.btnDeviceConnections = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label2 = new System.Windows.Forms.Label();
+            this.lblS2Quat = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.label4 = new System.Windows.Forms.Label();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pnlOrangeMenuButtonHolder = new System.Windows.Forms.Panel();
             this.gbSensor1 = new System.Windows.Forms.GroupBox();
-            this.lblS1AnglesData = new System.Windows.Forms.Label();
+            this.lblS1Quat = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.pbS1XMark = new System.Windows.Forms.PictureBox();
             this.lblS1Connection = new System.Windows.Forms.Label();
@@ -80,6 +80,7 @@
             this.cbRotationType2 = new System.Windows.Forms.ComboBox();
             this.cbRotationType1 = new System.Windows.Forms.ComboBox();
             this.cbBodyRegion = new System.Windows.Forms.ComboBox();
+            this.bgndwrkrUpdateUIQuat = new System.ComponentModel.BackgroundWorker();
             this.menuStrip.SuspendLayout();
             this.pnlLeftMenu.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -281,7 +282,7 @@
             // groupBox1
             // 
             this.groupBox1.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.lblS2Quat);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.pictureBox1);
             this.groupBox1.Controls.Add(this.label4);
@@ -295,16 +296,16 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Sensor 2";
             // 
-            // label2
+            // lblS2Quat
             // 
-            this.label2.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(173, 65);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(85, 18);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "(W, X, Y, Z)";
+            this.lblS2Quat.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.lblS2Quat.AutoSize = true;
+            this.lblS2Quat.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblS2Quat.Location = new System.Drawing.Point(111, 63);
+            this.lblS2Quat.Name = "lblS2Quat";
+            this.lblS2Quat.Size = new System.Drawing.Size(85, 18);
+            this.lblS2Quat.TabIndex = 3;
+            this.lblS2Quat.Text = "(W, X, Y, Z)";
             // 
             // label3
             // 
@@ -358,7 +359,7 @@
             // gbSensor1
             // 
             this.gbSensor1.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.gbSensor1.Controls.Add(this.lblS1AnglesData);
+            this.gbSensor1.Controls.Add(this.lblS1Quat);
             this.gbSensor1.Controls.Add(this.label1);
             this.gbSensor1.Controls.Add(this.pbS1XMark);
             this.gbSensor1.Controls.Add(this.lblS1Connection);
@@ -372,16 +373,16 @@
             this.gbSensor1.TabStop = false;
             this.gbSensor1.Text = "Sensor 1";
             // 
-            // lblS1AnglesData
+            // lblS1Quat
             // 
-            this.lblS1AnglesData.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.lblS1AnglesData.AutoSize = true;
-            this.lblS1AnglesData.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblS1AnglesData.Location = new System.Drawing.Point(173, 65);
-            this.lblS1AnglesData.Name = "lblS1AnglesData";
-            this.lblS1AnglesData.Size = new System.Drawing.Size(85, 18);
-            this.lblS1AnglesData.TabIndex = 3;
-            this.lblS1AnglesData.Text = "(W, X, Y, Z)";
+            this.lblS1Quat.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.lblS1Quat.AutoSize = true;
+            this.lblS1Quat.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblS1Quat.Location = new System.Drawing.Point(111, 63);
+            this.lblS1Quat.Name = "lblS1Quat";
+            this.lblS1Quat.Size = new System.Drawing.Size(85, 18);
+            this.lblS1Quat.TabIndex = 3;
+            this.lblS1Quat.Text = "(W, X, Y, Z)";
             // 
             // label1
             // 
@@ -667,6 +668,11 @@
             this.cbBodyRegion.TabIndex = 0;
             this.cbBodyRegion.Text = "Body Region";
             // 
+            // bgndwrkrUpdateUIQuat
+            // 
+            //this.bgndwrkrUpdateUIQuat.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgndwrkrUpdateUIQuat_DoWork);
+            //this.bgndwrkrUpdateUIQuat.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgndwrkrUpdateUIQuat_RunWorkerCompleted);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
@@ -719,14 +725,14 @@
         private System.Windows.Forms.ToolStripMenuItem fAQToolStripMenuItem;
         private System.Windows.Forms.Panel pnlLeftMenu;
         private System.Windows.Forms.GroupBox groupBox1;
-        public System.Windows.Forms.Label label2;
+        public System.Windows.Forms.Label lblS2Quat;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Panel pnlOrangeMenuButtonHolder;
         private System.Windows.Forms.GroupBox gbSensor1;
-        public System.Windows.Forms.Label lblS1AnglesData;
+        public System.Windows.Forms.Label lblS1Quat;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.PictureBox pbS1XMark;
         private System.Windows.Forms.Label lblS1Connection;
@@ -755,6 +761,7 @@
         private System.Windows.Forms.PictureBox pictureBox3;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.PictureBox pictureBox4;
+        public System.ComponentModel.BackgroundWorker bgndwrkrUpdateUIQuat;
     }
 }
 

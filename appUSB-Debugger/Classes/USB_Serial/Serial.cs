@@ -15,10 +15,12 @@ namespace appUSB_Debugger
 {
     public static class Serial
     {
-
+        private static MainForm _mainForm;
         public static List<Device> ignoredDevices = new List<Device>();
-        public static async void InitAllPortsAsync(USBCustom USB)
+
+        public static async void InitAllPortsAsync(USBCustom USB, MainForm mainForm)
         {
+            _mainForm = mainForm;
             //create list with current ComPorts
             var comPortSearchResults = new List<string>();
             USB.SearchComPorts(ref comPortSearchResults);
@@ -71,31 +73,26 @@ namespace appUSB_Debugger
                 currentDevice.comPort = comPort;
 
                 //serialPort event that's invoked when data is received.  Only adds msg to the device's class's List<string> readMsg, if the msg starts and ends with "~"
-                serialPort.DataReceived += (object sender, SerialDataReceivedEventArgs eventArgs) =>
-                {
-                    string message = "";
-                    try
-                    {
-                        message = serialPort.ReadLine();
-                    }
-                    catch
-                    {
-                        if(!currentDevice.serialPortReconnecting)
-                            ReconnectToDeviceAsync(currentDevice);
-                        return;
-                    }
-                    //Only adds messages with "~msg~" format.
-                    if (message.StartsWith("~") && message.EndsWith("~"))
-                    {
-                        currentDevice.readMsg.Add(message);
-
-                        //OUTPUT INCOMING MESSAGES
-                        //System.Diagnostics.Debug.WriteLine($"\t\t\t\t\t\t\t\t\t\t\t\t{message}");
-                    }
-                };
-
+                SerialDataReceivedEventHandler onRecieveDelegateWithoutQuat = delegate (object sender, SerialDataReceivedEventArgs eventArgs)
+                { onReceivedDataEvent(sender, eventArgs, currentDevice); };
+                serialPort.DataReceived += onRecieveDelegateWithoutQuat;
 
                 ClassifyDevice(currentDevice);
+
+                //removes old serialPort.DataReceived Event and adds a new one that includes the quatReceiver.
+                if (currentDevice == Hub.device)
+                {
+                    //remove onReceivedDataEvent
+                    currentDevice.serialPort.DataReceived -= onRecieveDelegateWithoutQuat;
+
+                    //add onReceivedDataEvent
+                    SerialDataReceivedEventHandler onRecieveDelegateWithQuat = delegate (object sender, SerialDataReceivedEventArgs eventArgs)
+                    { onReceivedDataEvent(sender, eventArgs, currentDevice, _mainForm); };
+                    currentDevice.serialPort.DataReceived += onRecieveDelegateWithQuat;
+
+                    Serial.Write(Hub.device, "~startQuatSender~");
+                    while (!Serial.ReceivedMessageBool(Hub.device, "~startingQuatSender~"));
+                }
                 return true;
             });
         }
@@ -148,7 +145,11 @@ namespace appUSB_Debugger
             //Check if any msgs in readMsg List<string> contain part of the expected Responses from Serial Init.
             for (int i = 0; i < currentDevice.readMsg.Count; i++)
                 if (currentDevice.readMsg[i].Contains("HUB;MacADD:") || currentDevice.readMsg[i].Contains("SENSOR;MacADD:"))
-                    return currentDevice.readMsg[i];
+                {
+                    string returnMsg = currentDevice.readMsg[i];
+                    currentDevice.readMsg.Remove(currentDevice.readMsg[i]);
+                    return returnMsg;
+                }
 
             return null;
         }
@@ -346,23 +347,27 @@ namespace appUSB_Debugger
 
         public static async void ReconnectToDeviceAsync(Device currentDevice)
         {
-            currentDevice.serialPortReconnecting = true;
+            if (!currentDevice.serialPortReconnecting)
+            {
+                currentDevice.serialPortReconnecting = true;
 
-            System.Diagnostics.Debug.WriteLine($"reconnecting to {currentDevice.comPort}...");
+                string currentDeviceComPort = currentDevice.comPort;
+                System.Diagnostics.Debug.WriteLine($"reconnecting to {currentDeviceComPort}...");
 
-            //delay
-            var sw = Stopwatch.StartNew();
-            while (sw.ElapsedMilliseconds <= 1000) ;
-            sw.Stop();
+                //delay
+                var sw = Stopwatch.StartNew();
+                while (sw.ElapsedMilliseconds <= 1000) ;
+                sw.Stop();
 
-            //Close Port
-            currentDevice.serialPort.Close();
+                //Close Port
+                currentDevice.serialPort.Close();
 
-            //Remove and Add Device
-            RemoveDevice(currentDevice.comPort);
-            await AddDevice(currentDevice.comPort);
+                //Remove and Add Device
+                RemoveDevice(currentDeviceComPort);
+                await AddDevice(currentDeviceComPort);
 
-            currentDevice.serialPortReconnecting = false;
+                currentDevice.serialPortReconnecting = false;
+            }
         }
 
         public static bool ReceivedMessageBool(Device currentDevice, string messageReceived)
@@ -375,6 +380,37 @@ namespace appUSB_Debugger
             }
             //if no messages are found to be == messageReceived, return False
             return false;
+        }
+
+        private static void onReceivedDataEvent(object sender, SerialDataReceivedEventArgs eventArgs, Device currentDevice, MainForm mainForm = null)
+        {
+            string message = "";
+            try
+            {
+                message = currentDevice.serialPort.ReadLine();
+            }
+            catch
+            {
+                ReconnectToDeviceAsync(currentDevice);
+                return;
+            }
+            //Adds messages with "~msg~" format to currentDevice.readMsg
+            if (message.StartsWith("~") && message.EndsWith("~"))
+            {
+                currentDevice.readMsg.Add(message);
+                
+                //OUTPUT INCOMING MESSAGES
+                System.Diagnostics.Debug.WriteLine($"\t\t\t\t\t\t\t\t\t\t\t\t{message}");
+                return;
+            }
+            if (mainForm != null)
+            {
+                Task.Factory.StartNew(() => GetQuat.CheckIncomingMsgForQuat(message, _mainForm));
+                //System.Diagnostics.Debug.WriteLine(message);
+                //else
+                    //System.Diagnostics.Debug.WriteLine("bgndWorkerBusy");
+            }
+            
         }
 
         public static void Write(Device currentDevice, string message)

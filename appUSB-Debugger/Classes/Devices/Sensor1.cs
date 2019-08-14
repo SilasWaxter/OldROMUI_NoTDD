@@ -11,6 +11,8 @@ namespace appUSB_Debugger
 {
     public static class Sensor1
     {
+        public static double[] q = { 0, 0, 0, 0 };
+        public static string sensorSpecifier = "S1";
         public static Device device;
     }
 }

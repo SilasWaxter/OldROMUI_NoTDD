@@ -24,7 +24,7 @@ namespace appUSB_Debugger
                 currentDeviceType = "Sensor 2";
             if (currentDevice.comPort == Hub.device.comPort)
                 currentDeviceType = "Hub";
-
+                
 
             System.Diagnostics.Debug.WriteLine($"Starting {currentDeviceType} Pair...\n");
             //System.Diagnostics.Debug.Write("\tSharing Key\n");
@@ -60,11 +60,12 @@ namespace appUSB_Debugger
             Serial.Write(currentDevice, "~restart~");                               //restart device.  set key to key_from_eeprom.  connect to hub via hubMacAdd_from_eeprom.
             while (!Serial.ReceivedMessageBool(currentDevice, "~restarting~")) ;    //wait for restart confirmation.
 
+            //if (currentDeviceType == "Sensor 1" || currentDeviceType == "Sensor 2")
+            //{
+            //    System.Diagnostics.Debug.WriteLine($"\t\tSafe to Remove {currentDeviceType}\n");
+            //}
+
             System.Diagnostics.Debug.WriteLine($"{currentDeviceType} Pair Complete.");
-            if (currentDeviceType == "Sensor 1" || currentDeviceType == "Sensor 2")
-            {
-                System.Diagnostics.Debug.WriteLine($"\t\tSafe to Remove {currentDeviceType}\n");
-            }
         }
 
         //Task Wrappers
@@ -85,7 +86,7 @@ namespace appUSB_Debugger
             Serial.Write(currentDevice, "~R2Rkey~");
 
             //Wait for device to accept prompt,
-            while (!Serial.ReceivedMessageBool(currentDevice, "~R2Rkey~")) ;//System.Diagnostics.Debug.Write("Waiting for ~R2Rkey~ Confirmation");
+            while (!Serial.ReceivedMessageBool(currentDevice, "~R2Rkey~")) ;
 
             Serial.TransferBytes(currentDevice, AES128Encryption.key);
             System.Diagnostics.Debug.WriteLine($"Key Transfer to ({currentDevice.serialPort.PortName}) Complete");
